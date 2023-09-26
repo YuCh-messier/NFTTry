@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ao</title>
+    <style>
+        .button{
+            margin: 20px;
+            padding-top: 10px;
+            padding-bottom: 10px;
+            background-color: aquamarine;
+            border-radius: 10px;
+            color: orange;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div id="mint" class="button">挖矿</div>
+    <div id="coin" class="button" style="display: flex;justify-content: center;">
+        <div>我的Ao币（点击更新）：</div>
+        <div id="coinN">0</div>
+    </div>
+    <div id="transfer" class="button">转账</div>
+    <div onclick="window.location='https://github.com/YuCh-messier'" style="background-color: black;" class="button">源码</div>
+    <div id="copy" class="button" style="background-color: bisque;white-space:pre-wrap;color: black;">
+本币
+Name:AoCoin
+Symble:Ao
+decimals:18
+address：点击复制合约地址
+网络：GeorliTestNet
+标准：ERC20
+挖矿限一次，可获100Ao
+    </div>
+    <script type="module">
+        import { ethers } from "./node_modules/ethers/dist/ethers.min.js";
+
+        let signer = null;
+        let provider;
+        var accountCur=''
+        var contractAdd="0x061E55238191BD08eA5ED1d2954EF3c7d9699ec0"
+        var contractP;
+        var contractS;
+        var abiP = [
+            "function decimals() view returns (uint8)",
+            "function symbol() view returns (string)",
+            "function balanceOf(address addr) view returns (uint256)",
+            "function totalSupply() view returns (uint256)",
+            ]
+        var abiS = [
+            "function mint() public returns(bool)",
+            "function transfer(address to,uint256 amount) public returns(bool)" 
+        ]
+
+        var ifL=false
+        var pri;
+        var pub;
+        function ifLT(){
+            if(!ifL){
+                pub=prompt("请输入公钥：")
+                pri=prompt("请输入私钥：")
+                ifL=true
+            }
+            else{
+                return true
+            }
+            return true
+        }
+
+        async function connect(){
+            if(!ifLT()){
+                return false
+            }
+            let url='https://goerli.infura.io/v3/aa9463558f9f4a26ae97cf7e4196bb58'
+            provider = new ethers.JsonRpcProvider(url)
+            signer = new ethers.Wallet(pri,provider)
+            accountCur=pub
+            contractP = new ethers.Contract(contractAdd, abiP, provider)
+            contractS = new ethers.Contract(contractAdd, abiS, signer)
+            return true
+        }
+
+        async function coin(){
+            if(!await connect()){
+                window.alert('请先登录小狐狸！')
+                return
+            }
+            let balance=ethers.formatEther(await contractP.balanceOf(accountCur))
+            document.getElementById('coin').innerHTML=balance
+        }
+        var coinE=document.getElementById('coin')
+        coinE.onclick=coin
+
+        async function mint(){
+            if(!await connect()){
+                window.alert('请先登录小狐狸！')
+                return
+            }
+            let res=await contractS.mint()
+            alert(1)
+        }
+        var mintE=document.getElementById('mint')
+        mintE.onclick=mint
+
+        async function transfer(){
+            if(!await connect()){
+                window.alert('请先登录小狐狸！')
+                return
+            }
+            let accountTo=prompt('请输入转账地址：')
+            let amount=prompt('请输入转账数量：')
+            await contractS.transfer(accountTo,ethers.parseEther(amount))
+            alert(1)
+            // var tx = await signer.sendTransaction({
+            // to: "0x5bdD8D67fDeA8173e971861870b26f97ab931C6B",
+            // value: ethers.parseEther("0.02")
+            // });
+
+            // // Often you may wish to wait until the transaction is mined
+            // let receipt = await tx.wait();
+            // alert(1)
+        }
+        var transferE=document.getElementById('transfer')
+        transferE.onclick=transfer
+
+        function copy(){
+            let con=document.createElement('input')
+            document.body.appendChild(con)
+            con.value=contractAdd
+            con.select()
+            document.execCommand('cut')
+            con.remove()
+            alert('复制成功'+contractAdd)
+        }
+        var copyE=document.getElementById('copy')
+        copyE.onclick=copy
+    </script>
+</body>
+</html>
